@@ -115,7 +115,7 @@ const Sandbox = ({ code }: { code: string }) => {
           </li>
         ))}
       </ul>
-      <iframe title="Sandbox" sandbox="allow-scripts" ref={iframeRef} className="invisible hidden" />
+      <iframe title="Sandbox" sandbox="allow-scripts"  ref={iframeRef} className="invisible hidden" />
     </div>
   );
 };
