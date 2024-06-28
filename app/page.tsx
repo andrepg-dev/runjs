@@ -111,7 +111,7 @@ export default function Home() {
             autoFocus
             ref={editorRef}
             basicSetup={{
-              autocompletion: true,
+              autocompletion: false,
               indentOnInput: true
             }}
             className="border-r border-border overflow-y-auto min-h-full w-screen pl-3 relative"
