@@ -61,6 +61,10 @@ export default function Home() {
   const [code] = useDebounce(value, 500)
   const editorRef = useRef<ReactCodeMirrorRef>(null);
 
+  useEffect(() => {
+    localStorage.getItem('code') && setValue(localStorage.getItem('code') as string)
+  }, [])
+
   const onChange = useCallback((val: any) => {
     localStorage.setItem('code', val)
     setValue(val);
@@ -73,9 +77,6 @@ export default function Home() {
     setValue(res + '\n')
   }
 
-  useEffect(() => {
-    localStorage.getItem('code') && setValue(localStorage.getItem('code') as string)
-  }, [])
 
   // Detectar si se ha tocado la combinacion de teclas alt + shift + f para formatear el código
   useEffect(() => {
@@ -98,7 +99,7 @@ export default function Home() {
           <Menu />
         </button>
         <Window name={value.slice(0, 30)} />
-        <button className="h-full px-3 flex items-center justify-center hover:bg-accent text-white" title="Nueva pestaña">
+        <button onClick={() => alert('Not now son')} className="h-full px-3 flex items-center justify-center hover:bg-accent text-white" title="Nueva pestaña">
           <Plus strokeWidth={2} size={16} />
         </button>
       </header>
