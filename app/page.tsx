@@ -55,7 +55,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 
 export default function Home() {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState('console.log([3, 4, 5, 23, 42, 523])\nconsole.log([3, 4, 5], [23123])');
   const editorRef = useRef<ReactCodeMirrorRef>(null);
 
   const onChange = useCallback((val: any) => {

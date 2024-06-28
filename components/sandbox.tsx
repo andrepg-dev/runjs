@@ -25,9 +25,16 @@ const Sandbox = ({ code }: { code: string }) => {
         setConsoleMessages((prev) => [...prev, { type: 'error', payload: { line, column, message } }]);
       },
       default: (payload: any, type: any) => {
-        const content = payload.map((item: any) =>
+
+        let content = payload.map((item: string) =>
           item
         ).join(' ');
+
+        if (payload.some((item: any) => !isPrimitive(item))) {
+          content = payload.map((item: string) =>
+            JSON.stringify(item)
+          ).join(' ');
+        }
 
         setConsoleMessages((prev) => [...prev, { type, payload: content }]);
       },
@@ -72,7 +79,7 @@ const Sandbox = ({ code }: { code: string }) => {
   };
 
   return (
-    <div className="overflow-y-auto min-h-full p-4 w-full text-green-500">
+    <div className="overflow-y-auto min-h-full pl-3 relative w-full text-green-500 p-4">
       <ul id="console-list">
         {consoleMessages.map((msg, index) => (
           <li key={index}>
@@ -128,3 +135,4 @@ export const HTML = (code: string) => `
     <script type="module">${code}</script>
 </body>
 </html>`;
+
