@@ -1,113 +1,134 @@
-import Image from 'next/image'
+'use client'
+import Window from "@/components/window";
+import { javascript } from '@codemirror/lang-javascript';
+import ReactCodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import { Menu, Plus } from "lucide-react";
+
+import { EditorView } from "@codemirror/view";
+import { createTheme } from '@uiw/codemirror-themes';
+
+import { tags as t } from '@lezer/highlight';
+
+import jsbeautify from 'js-beautify';
+
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+
+
+const myTheme = createTheme({
+  theme: 'dark',
+  settings: {
+    background: '#0c1021', // Azul
+    foreground: '#fbde2d', // Amarillo
+    caret: '#a7a7a7', // Gris
+    selection: '#253b76', // Azul oscuro
+    selectionMatch: 'transparent',
+    gutterBackground: '#0c1021',
+    gutterForeground: '#78887a', // Gris transparente para los elementos
+    gutterBorder: 'red',
+    gutterActiveForeground: '#838A84', // Gris transparente para los elementos
+    lineHighlight: 'transparent', // Linea seleccionada
+    fontFamily: 'inherit',
+  },
+  styles: [
+    { tag: t.comment, color: '#aeaeae' }, // Color gris de comentarios
+    { tag: t.definition(t.typeName), color: 'green' },
+    { tag: t.variableName, color: '#ff6411' }, // Naranja
+    { tag: t.string, color: '#61ce3c' }, // Verde
+    { tag: t.number, color: '#fbde2d' }, //Amarillo
+    { tag: t.function(t.variableName), color: '#8da6ce' }, // Azul 8da6ce
+    { tag: t.propertyName, color: '#FFF' }, // Blanco
+    { tag: t.bracket, color: '#FFF' }, // Blanco
+    { tag: t.squareBracket, color: '#FFF' }, // Blanco
+    { tag: t.definition(t.variableName), color: '#8da6ce' },
+    { tag: t.separator, color: '#FFF' }, // Blanco
+    { tag: t.derefOperator, color: '#FFF' }, // Blanco
+    { tag: t.null, color: '#d8fa3c' }, // Amarillo lima
+  ],
+});
+
+import Sandbox from "@/components/sandbox";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+const markdown = `function sumar(a, b, 42) {return a + b} console.log(sumar(1,2))`;
 
 export default function Home() {
+  const [value, setValue] = useState(markdown);
+  const editorRef = useRef<ReactCodeMirrorRef>(null);
+
+  const onChange = useCallback((val: any) => {
+    setValue(val);
+  }, []);
+
+  function formatCode() {
+    const res = jsbeautify(value, {
+      indent_size: 2,
+    })
+    setValue(res + '\n')
+  }
+
+  // Detectar si se ha tocado la combinacion de teclas alt + shift + f para formatear el código
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.altKey && event.shiftKey && event.key.toLowerCase() == 'f') {
+        formatCode()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [formatCode])
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <main className="h-screen overflow-hidden flex flex-col relative">
+      <header className="h-[37px] min-h-[37px] w-full flex items-center border-b border-border bg-secondary fixed top-0 left-0 right-0">
+        <button className="h-full px-4 bg-secondary flex items-center justify-center text-gray-400 border-border border-r hover:bg-accent">
+          <Menu />
+        </button>
+        <Window name="function drawGift(size, symbol) {" />
+        <button className="h-full px-3 flex items-center justify-center hover:bg-accent text-white" title="Nueva pestaña">
+          <Plus strokeWidth={2} size={16} />
+        </button>
+      </header>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="flex w-full h-screen pt-[37px]"
+      >
+        <ResizablePanel className="flex w-full" defaultSize={95} minSize={10}>
+          <ReactCodeMirror
+            value={value}
+            extensions={[
+              javascript({ jsx: false, typescript: true }),
+              EditorView.lineWrapping
+            ]}
+            theme={myTheme}
+            autoFocus
+            ref={editorRef}
+            basicSetup={{
+              autocompletion: true,
+              indentOnInput: true
+            }}
+            className="border-r border-border overflow-y-auto min-h-full w-screen pl-3 relative"
+            onChange={onChange}
+          />
+        </ResizablePanel>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+        <ResizableHandle />
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+        <ResizablePanel defaultSize={75} minSize={10} className="flex">
+          <Sandbox code={value} />
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
     </main>
+
   )
 }
+

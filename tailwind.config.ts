@@ -13,8 +13,20 @@ const config: Config = {
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
+      colors: {
+        border: 'var(--border)',
+        background: 'var(--background)',
+        secondary: 'var(--secondary)',
+        muted: 'hsl(var(--muted))',
+        accent: '#1b1f2f'
+      }
     },
+    fontFamily: {
+      dejavusans: ['DEJAVUSANSMONO'],
+    }
   },
   plugins: [],
 }
 export default config
+
+
