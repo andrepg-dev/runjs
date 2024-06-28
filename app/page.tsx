@@ -53,10 +53,9 @@ const myTheme = createTheme({
 import Sandbox from "@/components/sandbox";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const markdown = `function sumar(a, b, 42) {return a + b} console.log(sumar(1,2))`;
 
 export default function Home() {
-  const [value, setValue] = useState(markdown);
+  const [value, setValue] = useState('');
   const editorRef = useRef<ReactCodeMirrorRef>(null);
 
   const onChange = useCallback((val: any) => {
