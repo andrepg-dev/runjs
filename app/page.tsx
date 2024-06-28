@@ -62,6 +62,7 @@ export default function Home() {
   const editorRef = useRef<ReactCodeMirrorRef>(null);
 
   const onChange = useCallback((val: any) => {
+    localStorage.setItem('code', val)
     setValue(val);
   }, []);
 
@@ -71,6 +72,10 @@ export default function Home() {
     })
     setValue(res + '\n')
   }
+
+  useEffect(() => {
+    localStorage.getItem('code') && setValue(localStorage.getItem('code') as string)
+  }, [])
 
   // Detectar si se ha tocado la combinacion de teclas alt + shift + f para formatear el código
   useEffect(() => {
