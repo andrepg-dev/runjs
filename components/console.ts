@@ -1,11 +1,12 @@
 export const generateConsoleScript = () => {
   return `<script>
     const customConsole = (w) => {
-      const pushToConsole = (payload, type) => {
+      const pushToConsole = (payload, type, line) => {
         w.parent.postMessage({
           console: {
             payload: payload,
-            type:    type
+            type: type,
+            line: line,
           }
         }, "*");
       }
@@ -13,22 +14,46 @@ export const generateConsoleScript = () => {
       pushToConsole("clear", "system");
 
       w.onerror = (message, url, line, column) => {
-        const fixedLine = line - 49;
-        pushToConsole({ line: fixedLine, column: column -1 , message }, "error");
+        const fixedLine = line - 74;
+        pushToConsole({ line: fixedLine, column: column - 1, message }, "error", fixedLine, column - 1);
       }
 
       const console = {
         log: function(...args){
-          pushToConsole(args, "log:log");
+          try {
+            throw new Error();
+          } catch (error) {
+            const stack = error.stack.split("\\n")[2].trim();
+            const line = stack.match(/:(\\d+):\\d+/)[1] - 74;
+            pushToConsole(args, "log", line);
+          }
         },
         error: function(...args){
-          pushToConsole(args, "log:error");
+          try {
+            throw new Error();
+          } catch (error) {
+            const stack = error.stack.split("\\n")[2].trim();
+            const line = stack.match(/:(\\d+):\\d+/)[1] - 74;
+            pushToConsole(args, "error", line);
+          }
         },
         warn: function(...args){
-          pushToConsole(args, "log:warn");
+          try {
+            throw new Error();
+          } catch (error) {
+            const stack = error.stack.split("\\n")[2].trim();
+            const line = stack.match(/:(\\d+):\\d+/)[1] - 74;
+            pushToConsole(args, "warn", line);
+          }
         },
         info: function(...args){
-          pushToConsole(args, "log:info");
+          try {
+            throw new Error();
+          } catch (error) {
+            const stack = error.stack.split("\\n")[2].trim();
+            const line = stack.match(/:(\\d+):\\d+/)[1] - 74;
+            pushToConsole(args, "info", line);
+          }
         }
       }
 
@@ -38,5 +63,5 @@ export const generateConsoleScript = () => {
     if (window.parent){
       customConsole(window);
     }
-    </script>`
+    </script>`;
 }

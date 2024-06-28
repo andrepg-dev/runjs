@@ -13,6 +13,7 @@ import { useDebounce } from 'use-debounce';
 
 import jsbeautify from 'js-beautify';
 
+
 import {
   ResizableHandle,
   ResizablePanel,
@@ -123,7 +124,7 @@ export default function Home() {
               autocompletion: false,
               indentOnInput: true
             }}
-            className="border-r border-border overflow-y-auto min-h-full w-screen pl-3 relative"
+            className="border-r border-border overflow-y-auto min-h-full w-screen pl-3 relative text-base"
             onChange={onChange}
           />
         </ResizablePanel>

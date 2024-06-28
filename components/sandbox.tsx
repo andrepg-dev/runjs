@@ -94,12 +94,10 @@ const Sandbox = ({ code }: { code: string }) => {
                 <div className="flex gap-2">
                   <div className="flex flex-col text-yellow-300 select-none">
                     {Array.of(
-                      msg.payload.line - 2,
-                      msg.payload.line - 1,
                       msg.payload.line,
                       msg.payload.line + 1,
                       msg.payload.line + 2,
-                      msg.payload.line + 3).map(item => (
+                      ).map(item => (
                         <span key={item} className="text-nowrap">
                           {item} |
                         </span>
@@ -107,7 +105,7 @@ const Sandbox = ({ code }: { code: string }) => {
                   </div>
 
                   <span className="whitespace-pre-wrap" >
-                    {code.split('\n').slice(msg.payload.line - 3, msg.payload.line + 3).join('\n')}
+                    {code.split('\n').slice(msg.payload.line - 1, msg.payload.line + 2).join('\n')}
                   </span>
                 </div>
               </div>
@@ -115,7 +113,7 @@ const Sandbox = ({ code }: { code: string }) => {
           </li>
         ))}
       </ul>
-      <iframe title="Sandbox" sandbox="allow-scripts"  ref={iframeRef} className="invisible hidden" />
+      <iframe title="Sandbox" sandbox="allow-scripts" ref={iframeRef} className="invisible hidden" />
     </div>
   );
 };
@@ -135,4 +133,3 @@ export const HTML = (code: string) => `
     <script type="module">${code}</script>
 </body>
 </html>`;
-

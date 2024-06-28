@@ -61,13 +61,13 @@ body {
   user-select: none;
 }
 
-.cm-gutters::hover .ͼ1 .cm-foldGutter span {
+/* .cm-gutters::hover .ͼ1 .cm-foldGutter span {
   opacity: 1;
 }
 
 .ͼ1 .cm-foldGutter span {
   opacity: 0;
-}
+} */
 
 .ͼ1.cm-focused {
   outline: none;
