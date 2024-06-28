@@ -3,16 +3,16 @@ import { generateConsoleScript } from "./console";
 
 const Sandbox = ({ code }: { code: string }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [consoleMessages, setConsoleMessages] = useState<{ type: any; payload: any; }[]>([]);
+  const [consoleMessages, setConsoleMessages] = useState<{ type: any; payload: any; line?: any }[]>([]);
 
   useEffect(() => {
     const isPrimitive = (item: any) => {
       return ['string', 'number', 'boolean', 'symbol', 'bigint'].includes(typeof item) || item === null || item === undefined;
-    }
+    };
 
     const clearConsole = () => {
       setConsoleMessages([]);
-    }
+    };
 
     const handlers: Record<any, any> = {
       system: (payload: any) => {
@@ -24,40 +24,35 @@ const Sandbox = ({ code }: { code: string }) => {
         const { line, column, message } = payload;
         setConsoleMessages((prev) => [...prev, { type: 'error', payload: { line, column, message } }]);
       },
-      default: (payload: any, type: any) => {
-
-        let content = payload.map((item: string) =>
-          item
-        ).join(' ');
+      default: (payload: any, type: any, line: any) => {
+        let content = payload.map((item: string) => item).join(' ');
 
         if (payload.some((item: any) => !isPrimitive(item))) {
-          content = payload.map((item: string) =>
-            JSON.stringify(item)
-          ).join(' ');
+          content = payload.map((item: string) => JSON.stringify(item)).join(' ');
         }
 
-        setConsoleMessages((prev) => [...prev, { type, payload: content }]);
+        setConsoleMessages((prev) => [...prev, { type, payload: content, line }]);
       },
       loop: (payload: any) => {
         clearConsole();
         const { message } = payload;
         setConsoleMessages((prev) => [...prev, { type: 'loop', payload: { message } }]);
-      }
-    }
+      },
+    };
 
     const handleMessage = (event: MessageEvent) => {
-      const { console } = event.data;
-      if (!console) return;
+      const { console: ConsoleData } = event.data;
+      if (!ConsoleData) return;
 
-      const { payload, type } = console;
+      const { payload, type, line } = ConsoleData;
 
       if (event.source === iframeRef.current?.contentWindow) {
         const handler = handlers[type] || handlers.default;
-        handler(payload, type);
+        handler(payload, type, line);
       } else if (type === 'loop') {
         handlers.loop(payload);
       }
-    }
+    };
 
     window.addEventListener('message', handleMessage);
 
@@ -78,40 +73,53 @@ const Sandbox = ({ code }: { code: string }) => {
     }
   };
 
+  // Lineas totales del codigo y respuesta más el espacio de cada respuesta
+  const totalLines: any = consoleMessages.reduce((acc, msg) => acc + msg.payload.split('\n').length, 0);
+
   return (
-    <div className="overflow-y-auto min-h-full pl-3 relative w-full text-green-500 p-4">
-      <ul id="console-list">
-        {consoleMessages.map((msg, index) => (
-          <li key={index}>
-            {/* */}
-            {msg.type !== 'error' && <span className="text-wrap whitespace-pre-wrap">{msg.payload}</span>}
-            {msg.type === 'error' && (
+    <div className="overflow-y-auto min-h-full pl-3 relative w-full py-[13px]">
+      <ul id="console-list" className="flex">
+        <div className="flex flex-col text-[#78887a] text-right mr-4">
+          {Array(totalLines).fill(0).map((_, index) => (
+            <span key={index} className="text-nowrap">{index + 1}</span>
+          ))}
+        </div>
 
-              <div key={msg.payload.line} className="flex flex-col gap-4 text-[#ff6400]">
-
-                <span>{msg.payload.message}</span>
-
-                <div className="flex gap-2">
-                  <div className="flex flex-col text-yellow-300 select-none">
-                    {Array.of(
-                      msg.payload.line,
-                      msg.payload.line + 1,
-                      msg.payload.line + 2,
+        <div>
+          {consoleMessages.map((msg, index) => (
+            <li key={index}>
+              {msg.type !== 'error' && (
+                <div key={msg.line} className="flex gap-4">
+                  <span className={`text-wrap whitespace-pre-wrap text-green-500`}>
+                    {/* TODO: Mostrar en la derecha y en la linea que debe de ir */}
+                    {msg.payload}
+                  </span>
+                </div>
+              )}
+              {msg.type === 'error' && (
+                <div key={msg.payload.line} className="flex flex-col gap-4 text-[#ff6400]">
+                  <span>{msg.payload.message}</span>
+                  <div className="flex gap-2">
+                    <div className="flex flex-col text-yellow-300 select-none">
+                      {Array.of(
+                        msg.payload.line,
+                        msg.payload.line + 1,
+                        msg.payload.line + 2,
                       ).map(item => (
                         <span key={item} className="text-nowrap">
                           {item} |
                         </span>
                       ))}
+                    </div>
+                    <span className="whitespace-pre-wrap">
+                      {code.split('\n').slice(msg.payload.line - 1, msg.payload.line + 2).join('\n')}
+                    </span>
                   </div>
-
-                  <span className="whitespace-pre-wrap" >
-                    {code.split('\n').slice(msg.payload.line - 1, msg.payload.line + 2).join('\n')}
-                  </span>
                 </div>
-              </div>
-            )}
-          </li>
-        ))}
+              )}
+            </li>
+          ))}
+        </div>
       </ul>
       <iframe title="Sandbox" sandbox="allow-scripts" ref={iframeRef} className="invisible hidden" />
     </div>
