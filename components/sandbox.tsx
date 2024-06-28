@@ -74,7 +74,11 @@ const Sandbox = ({ code }: { code: string }) => {
   };
 
   // Lineas totales del codigo y respuesta más el espacio de cada respuesta
-  const totalLines: any = consoleMessages.reduce((acc, msg) => acc + msg.payload.split('\n').length, 0);
+  const totalLines: any = consoleMessages.reduce((acc, msg) => {
+    // Verificar si payload es un string, si no, convertirlo a string.
+    const payloadStr = typeof msg.payload === 'string' ? msg.payload : JSON.stringify(msg.payload);
+    return acc + payloadStr.split('\n').length;
+  }, 0);
 
   return (
     <div className="overflow-y-auto min-h-full pl-3 relative w-full py-[13px]">
