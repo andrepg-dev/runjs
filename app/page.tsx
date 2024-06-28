@@ -9,6 +9,8 @@ import { createTheme } from '@uiw/codemirror-themes';
 
 import { tags as t } from '@lezer/highlight';
 
+import { useDebounce } from 'use-debounce';
+
 import jsbeautify from 'js-beautify';
 
 import {
@@ -55,7 +57,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 
 export default function Home() {
-  const [value, setValue] = useState('console.log([3, 4, 5, 23, 42, 523])\nconsole.log([3, 4, 5], [23123])');
+  const [value, setValue] = useState('');
+  const [code] = useDebounce(value, 500)
   const editorRef = useRef<ReactCodeMirrorRef>(null);
 
   const onChange = useCallback((val: any) => {
@@ -89,7 +92,7 @@ export default function Home() {
         <button className="h-full px-4 bg-secondary flex items-center justify-center text-gray-400 border-border border-r hover:bg-accent">
           <Menu />
         </button>
-        <Window name="function drawGift(size, symbol) {" />
+        <Window name={value.slice(0, 30)} />
         <button className="h-full px-3 flex items-center justify-center hover:bg-accent text-white" title="Nueva pestaña">
           <Plus strokeWidth={2} size={16} />
         </button>
@@ -100,9 +103,9 @@ export default function Home() {
         direction="horizontal"
         className="flex w-full h-screen pt-[37px]"
       >
-        <ResizablePanel className="flex w-full" defaultSize={95} minSize={10}>
+        <ResizablePanel className="flex w-full" defaultSize={80} minSize={10}>
           <ReactCodeMirror
-            value={value}
+            value={code}
             extensions={[
               javascript({ jsx: false, typescript: true }),
               EditorView.lineWrapping
@@ -122,7 +125,7 @@ export default function Home() {
         <ResizableHandle />
 
         <ResizablePanel defaultSize={75} minSize={10} className="flex">
-          <Sandbox code={value} />
+          <Sandbox code={code} />
         </ResizablePanel>
       </ResizablePanelGroup>
 
