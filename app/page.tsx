@@ -1,10 +1,9 @@
 'use client'
 import Window from "@/components/window";
 import { javascript } from '@codemirror/lang-javascript';
-import ReactCodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import ReactCodeMirror, { ReactCodeMirrorRef, EditorView } from "@uiw/react-codemirror";
 import { Menu, Plus } from "lucide-react";
 
-import { EditorView } from "@codemirror/view";
 import { createTheme } from '@uiw/codemirror-themes';
 
 import { tags as t } from '@lezer/highlight';
@@ -21,7 +20,7 @@ import {
 } from "@/components/ui/resizable";
 
 
-const myTheme = createTheme({
+export const myTheme = createTheme({
   theme: 'dark',
   settings: {
     background: '#0c1021', // Azul
@@ -59,7 +58,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function Home() {
   const [value, setValue] = useState('');
-  const [code] = useDebounce(value, 500)
+  const [code] = useDebounce(value, 600)
   const editorRef = useRef<ReactCodeMirrorRef>(null);
 
   useEffect(() => {
@@ -122,7 +121,8 @@ export default function Home() {
             ref={editorRef}
             basicSetup={{
               autocompletion: false,
-              indentOnInput: true
+              indentOnInput: true,
+              lintKeymap: true,
             }}
             className="border-r border-border overflow-y-auto min-h-full w-screen pl-3 relative text-base"
             onChange={onChange}
@@ -133,6 +133,7 @@ export default function Home() {
 
         <ResizablePanel defaultSize={75} minSize={10} className="flex">
           <Sandbox code={code} />
+
         </ResizablePanel>
       </ResizablePanelGroup>
 
