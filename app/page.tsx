@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/resizable";
 
 
-const myTheme = createTheme({
+export const myTheme = createTheme({
   theme: 'dark',
   settings: {
     background: '#0c1021', // Azul
@@ -133,6 +133,7 @@ export default function Home() {
 
         <ResizablePanel defaultSize={75} minSize={10} className="flex">
           <Sandbox code={code} />
+
         </ResizablePanel>
       </ResizablePanelGroup>
 

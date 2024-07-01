@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { generateConsoleScript } from "./console";
+import ReactCodeMirror, { EditorView } from "@uiw/react-codemirror";
+import { javascript } from "@codemirror/lang-javascript";
+import { myTheme } from "@/app/page";
 
 const Sandbox = ({ code }: { code: string }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -98,29 +101,47 @@ const Sandbox = ({ code }: { code: string }) => {
             <li key={index}>
               {msg.type === 'error' && (
                 <div key={msg.payload.line} className="flex flex-col gap-4 text-[#ff6400]">
-                  <span>{msg.payload.message}</span>
+                  <span className="text-[#d8eb2b]">{msg.payload.message}</span>
                   <div className="flex gap-2">
-                    <div className="flex flex-col text-yellow-300 select-none">
+                    <span>{'>'}</span>
+                    <div className="flex flex-col text-[#d8eb2b]">
                       {Array.of(
                         msg.payload.line,
                         msg.payload.line + 1,
                         msg.payload.line + 2,
+                        msg.payload.line + 3,
+                        msg.payload.line + 4,
+
                       ).map(item => (
                         <span key={item} className="text-nowrap">
                           {item} |
                         </span>
                       ))}
                     </div>
-                    <span className="whitespace-pre-wrap text-wrap">
-                      {code.split('\n').slice(msg.payload.line - 1, msg.payload.line + 2).join('\n')}
-                    </span>
+                    <ReactCodeMirror
+                      value={code.split('\n').slice(msg.payload.line - 1, msg.payload.line + 4).join('\n')}
+                      extensions={[
+                        javascript({ jsx: false, typescript: true }),
+                        EditorView.lineWrapping,
+                      ]}
+                      theme={myTheme}
+                      editable={false}
+                      autoFocus
+                      basicSetup={{
+                        autocompletion: false,
+                        indentOnInput: true,
+                        foldGutter: false,
+                        lineNumbers: false,
+                      }}
+                      className="especial"
+                    />
                   </div>
                 </div>
               )}
 
               {consoleMessages.every(item => item.type !== 'error') && (
                 <div key={msg.line} className="flex gap-4">
-                  <span className={`text-wrap whitespace-pre-wrap text-green-500`}>
+                  <span className={`text-wrap whitespace-pre-wrap text-[#61ce3c]`}>
                     {msg.payload}
                   </span>
                 </div>
@@ -128,9 +149,9 @@ const Sandbox = ({ code }: { code: string }) => {
             </li>
           ))}
         </div>
-      </ul>
+      </ul >
       <iframe title="Sandbox" sandbox="allow-scripts" ref={iframeRef} className="invisible hidden" />
-    </div>
+    </div >
   );
 };
 

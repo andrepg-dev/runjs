@@ -9,6 +9,10 @@
   --secondary: #0f1324;
 }
 
+::selection{
+  background-color: #253b76;
+}
+
 @font-face {
   font-family: 'DEJAVUSANSMONO';
   src: url('/static/dejavu-sans-mono/ttf/DejaVuSansMono.ttf')
@@ -81,4 +85,8 @@ body {
 .cm-content {
   padding-top: 13px !important;
   padding-bottom: 13px !important;
+}
+
+.especial .cm-lineWrapping{
+  padding: 0 !important;
 }
