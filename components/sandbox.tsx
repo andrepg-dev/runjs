@@ -1,8 +1,10 @@
+'use client'
+
 import { useEffect, useRef, useState } from "react";
 import { generateConsoleScript } from "./console";
 import ReactCodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
-import { myTheme } from "@/app/page";
+import { myTheme } from "@/theme/mytheme";
 
 const Sandbox = ({ code }: { code: string }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
