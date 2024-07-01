@@ -26,7 +26,7 @@ export const viewTheme = createTheme({
     { tag: t.function(t.variableName), color: '#61ce3c' }, // Azul 8da6ce
     { tag: t.propertyName, color: '#61ce3c' }, // Blanco
     { tag: t.bracket, color: '#FFF' }, // Blanco
-    { tag: t.squareBracket, color: '#61ce3c' }, // Blanco
+    { tag: t.squareBracket, color: '#FFF' }, // Blanco
     { tag: t.definition(t.variableName), color: '#61ce3c' },
     { tag: t.separator, color: '#FFF' }, // Blanco
     { tag: t.derefOperator, color: '#FFF' }, // Blanco
