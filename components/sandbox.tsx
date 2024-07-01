@@ -88,7 +88,7 @@ const Sandbox = ({ code }: { code: string }) => {
     <div className="overflow-y-auto min-h-full pl-3 relative w-full py-[13px]">
       <ul id="console-list" className="flex">
         <div className="flex flex-col text-[#78887a] text-right mr-4 select-none">
-          {Array(totalLines).fill(0).map((_, index) => (
+          {consoleMessages.every(item => item.type !== 'error') && Array(totalLines).fill(0).map((_, index) => (
             <span key={index} className="text-nowrap">{index + 1}</span>
           ))}
         </div>
@@ -96,13 +96,6 @@ const Sandbox = ({ code }: { code: string }) => {
         <div>
           {consoleMessages.map((msg, index) => (
             <li key={index}>
-              {msg.type !== 'error' && (
-                <div key={msg.line} className="flex gap-4">
-                  <span className={`text-wrap whitespace-pre-wrap text-green-500`}>
-                    {msg.payload}
-                  </span>
-                </div>
-              )}
               {msg.type === 'error' && (
                 <div key={msg.payload.line} className="flex flex-col gap-4 text-[#ff6400]">
                   <span>{msg.payload.message}</span>
@@ -118,10 +111,18 @@ const Sandbox = ({ code }: { code: string }) => {
                         </span>
                       ))}
                     </div>
-                    <span className="whitespace-pre-wrap">
+                    <span className="whitespace-pre-wrap text-wrap">
                       {code.split('\n').slice(msg.payload.line - 1, msg.payload.line + 2).join('\n')}
                     </span>
                   </div>
+                </div>
+              )}
+
+              {consoleMessages.every(item => item.type !== 'error') && (
+                <div key={msg.line} className="flex gap-4">
+                  <span className={`text-wrap whitespace-pre-wrap text-green-500`}>
+                    {msg.payload}
+                  </span>
                 </div>
               )}
             </li>
