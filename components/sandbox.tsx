@@ -1,68 +1,68 @@
 'use client'
-
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { generateConsoleScript } from "./console";
 import ReactCodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { myTheme } from "@/theme/mytheme";
+import { viewTheme } from "@/theme/view-theme";
 
 const Sandbox = ({ code }: { code: string }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [consoleMessages, setConsoleMessages] = useState<{ type: any; payload: any; line?: any }[]>([]);
 
-  useEffect(() => {
-    const isPrimitive = (item: any) => {
-      return ['string', 'number', 'boolean', 'symbol', 'bigint'].includes(typeof item) || item === null || item === undefined;
-    };
+  const isPrimitive = useCallback((item: any) =>
+    ['string', 'number', 'boolean', 'symbol', 'bigint'].includes(typeof item) || item === null || item === undefined,
+    []
+  );
+  const clearConsole = () => {
+    setConsoleMessages([]);
+  };
 
-    const clearConsole = () => {
-      setConsoleMessages([]);
-    };
-
-    const handlers: Record<any, any> = {
-      system: (payload: any) => {
-        if (payload === 'clear') {
-          clearConsole();
-        }
-      },
-      error: (payload: any) => {
-        const { line, column, message } = payload;
-        setConsoleMessages((prev) => [...prev, { type: 'error', payload: { line, column, message } }]);
-      },
-      default: (payload: any, type: any, line: any) => {
-        let content = payload.map((item: string) => `'${item}'`).join(' ');
-
-        if (payload.some((item: any) => typeof item === 'number')) {
-          content = payload.map((item: string) => item).join(' ');
-        }
-
-        if (payload.some((item: any) => !isPrimitive(item))) {
-          content = payload.map((item: string) => JSON.stringify(item)).join(' ');
-        }
-
-        setConsoleMessages((prev) => [...prev, { type, payload: content, line }]);
-      },
-      loop: (payload: any) => {
+  const handlers: Record<any, any> = {
+    system: (payload: any) => {
+      if (payload === 'clear') {
         clearConsole();
-        const { message } = payload;
-        setConsoleMessages((prev) => [...prev, { type: 'loop', payload: { message } }]);
-      },
-    };
-
-    const handleMessage = (event: MessageEvent) => {
-      const { console: ConsoleData } = event.data;
-      if (!ConsoleData) return;
-
-      const { payload, type, line } = ConsoleData;
-
-      if (event.source === iframeRef.current?.contentWindow) {
-        const handler = handlers[type] || handlers.default;
-        handler(payload, type, line);
-      } else if (type === 'loop') {
-        handlers.loop(payload);
       }
-    };
+    },
+    error: (payload: any) => {
+      const { line, column, message } = payload;
+      setConsoleMessages((prev) => [...prev, { type: 'error', payload: { line, column, message } }]);
+    },
+    default: (payload: any, type: any, line: any) => {
+      let content = payload.map((item: string) => "'" + item + "'").join(' ');
 
+      if (payload.some((item: any) => typeof item === 'number' || typeof item === 'boolean' || typeof item === 'bigint')) {
+        content = payload.map((item: string) => item).join(' ');
+      }
+
+      if (payload.some((item: any) => !isPrimitive(item))) {
+        content = payload.map((item: string) => JSON.stringify(item)).join(' ');
+      }
+
+      setConsoleMessages((prev) => [...prev, { type, payload: content, line }]);
+    },
+    loop: (payload: any) => {
+      clearConsole();
+      const { message } = payload;
+      setConsoleMessages((prev) => [...prev, { type: 'loop', payload: { message } }]);
+    },
+  };
+
+  const handleMessage = (event: MessageEvent) => {
+    const { console: ConsoleData } = event.data;
+    if (!ConsoleData) return;
+
+    const { payload, type, line } = ConsoleData;
+
+    if (event.source === iframeRef.current?.contentWindow) {
+      const handler = handlers[type] || handlers.default;
+      handler(payload, type, line);
+    } else if (type === 'loop') {
+      handlers.loop(payload);
+    }
+  };
+
+  useEffect(() => {
     window.addEventListener('message', handleMessage);
 
     return () => {
@@ -74,87 +74,94 @@ const Sandbox = ({ code }: { code: string }) => {
     runCode();
   }, [code]);
 
-  const runCode = () => {
+  const runCode = useCallback(() => {
     const blob = new Blob([HTML(code)], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     if (iframeRef.current) {
       iframeRef.current.src = url;
     }
-  };
+  }, [code])
 
-  // Lineas totales del codigo y respuesta más el espacio de cada respuesta
-  const totalLines: any = consoleMessages.reduce((acc, msg) => {
-    // Verificar si payload es un string, si no, convertirlo a string.
-    const payloadStr = typeof msg.payload === 'string' ? msg.payload : JSON.stringify(msg.payload);
-    return acc + payloadStr.split('\n').length;
-  }, 0);
+  const allMessage = () => {
+    return consoleMessages.map((msg) => {
+      if (msg.type !== 'error') {
+        return msg.payload;
+      }
+    }).join('\n');
+  }
+
+  const errorMessage = (code: any, msg: any) => {
+    return code.split('\n').slice(
+      msg.payload.line - 2 > -1 ? msg.payload.line - 2
+        : msg.payload.line - 1, msg.payload.line + 4).join('\n')
+  }
 
   return (
-    <div className="overflow-y-auto min-h-full pl-3 relative w-full py-[13px]">
-      <ul id="console-list" className="flex">
-        <div className="flex flex-col text-[#78887a] text-right mr-4 select-none">
-          {consoleMessages.every(item => item.type !== 'error') && Array(totalLines).fill(0).map((_, index) => (
-            <span key={index} className="text-nowrap">{index + 1}</span>
-          ))}
-        </div>
-
-        <div>
-          {consoleMessages.map((msg, index) => (
-            <li key={index}>
-              {msg.type === 'error' && (
-                <div key={msg.payload.line} className="flex flex-col gap-4 text-[#ff6400]">
-                  <span className="text-[#d8eb2b]">{msg.payload.message}</span>
-                  <div className="flex gap-2">
-                    <span>
-                      {msg.payload.line - 2 > -1 && <br />}
-                      {'>'}</span>
-                    <div className="flex flex-col text-[#d8eb2b]">
-                      {Array.of(
-                        msg.payload.line - 1,
-                        msg.payload.line,
-                        msg.payload.line + 1,
-                        msg.payload.line + 2,
-                        msg.payload.line + 3,
-                        msg.payload.line + 4,
-                      ).map(item => (
-                        <span key={item} className="text-nowrap">
-                          {item > 0 && <>{item} |</>}
-                        </span>
-                      ))}
-                    </div>
-                    <ReactCodeMirror
-                      value={code.split('\n').slice(
-                        msg.payload.line - 2 > -1 ? msg.payload.line - 2
-                          : msg.payload.line - 1, msg.payload.line + 4).join('\n')}
-                      extensions={[
-                        javascript({ jsx: false, typescript: true }),
-                        EditorView.lineWrapping,
-                      ]}
-                      theme={myTheme}
-                      editable={false}
-                      autoFocus
-                      basicSetup={{
-                        autocompletion: false,
-                        indentOnInput: true,
-                        foldGutter: false,
-                        lineNumbers: false,
-                      }}
-                      className="especial"
-                    />
+    <div className="overflow-y-auto min-h-full relative w-full py-[13px]">
+      <ul id="console-list" className="flex ml-2">
+        {consoleMessages.map((msg, index) => (
+          <li key={index}>
+            {msg.type === 'error' && (
+              <div key={msg.payload.line} className="flex flex-col gap-4 text-[#ff6400]">
+                <span className="text-[#d8eb2b]">{msg.payload.message}</span>
+                <div className="flex gap-2">
+                  <span>
+                    {msg.payload.line - 2 > -1 && <br />}
+                    {'>'}</span>
+                  <div className="flex flex-col text-[#d8eb2b]">
+                    {Array.of(
+                      msg.payload.line - 1,
+                      msg.payload.line,
+                      msg.payload.line + 1,
+                      msg.payload.line + 2,
+                      msg.payload.line + 3,
+                      msg.payload.line + 4,
+                    ).map(item => (
+                      <span key={item} className="text-nowrap">
+                        {item > 0 && <>{item} |</>}
+                      </span>
+                    ))}
                   </div>
+                  <ReactCodeMirror
+                    value={errorMessage(code, msg)}
+                    extensions={[
+                      javascript({ jsx: false, typescript: true }),
+                      EditorView.lineWrapping,
+                    ]}
+                    theme={myTheme}
+                    editable={false}
+                    autoFocus
+                    basicSetup={{
+                      autocompletion: false,
+                      foldGutter: false,
+                      lineNumbers: false,
+                    }}
+                    className="especial"
+                  />
                 </div>
-              )}
+              </div>
+            )}
+          </li>
+        ))}
 
-              {consoleMessages.every(item => item.type !== 'error') && (
-                <div key={msg.line} className="flex gap-4">
-                  <span className={`text-wrap whitespace-pre-wrap text-[#61ce3c]`}>
-                    {msg.payload}
-                  </span>
-                </div>
-              )}
-            </li>
-          ))}
-        </div>
+        {consoleMessages.every(item => item.type !== 'error') && (
+          <ReactCodeMirror
+            value={allMessage()}
+            extensions={[
+              javascript({ jsx: false, typescript: true }),
+              EditorView.lineWrapping,
+            ]}
+            theme={viewTheme}
+            editable={false}
+            autoFocus
+            basicSetup={{
+              autocompletion: false,
+              foldGutter: false,
+            }}
+            className="especial-2 overflow-y-auto min-h-full min-w-full relative text-base custom-line-height"
+          />
+        )}
+
       </ul >
       <iframe title="Sandbox" sandbox="allow-scripts" ref={iframeRef} className="invisible hidden" />
     </div >

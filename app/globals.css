@@ -90,3 +90,8 @@ body {
 .especial .cm-lineWrapping{
   padding: 0 !important;
 }
+
+.especial-2 .cm-lineWrapping{
+  margin: 0px 8px !important;
+  padding-top: 0 !important;
+}
