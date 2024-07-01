@@ -5,6 +5,7 @@ import ReactCodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { myTheme } from "@/theme/mytheme";
 import { viewTheme } from "@/theme/view-theme";
+import { formatCode } from "@/lib/utils";
 
 const Sandbox = ({ code }: { code: string }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -14,6 +15,7 @@ const Sandbox = ({ code }: { code: string }) => {
     ['string', 'number', 'boolean', 'symbol', 'bigint'].includes(typeof item) || item === null || item === undefined,
     []
   );
+  
   const clearConsole = () => {
     setConsoleMessages([]);
   };
@@ -36,7 +38,9 @@ const Sandbox = ({ code }: { code: string }) => {
       }
 
       if (payload.some((item: any) => !isPrimitive(item))) {
-        content = payload.map((item: string) => JSON.stringify(item)).join(' ');
+        content = payload.map((item: string) => formatCode(JSON.stringify(item), {
+          brace_style: 'collapse'
+        })).join(' ');
       }
 
       setConsoleMessages((prev) => [...prev, { type, payload: content, line }]);

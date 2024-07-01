@@ -9,8 +9,12 @@
   --secondary: #0f1324;
 }
 
-::selection{
+::selection {
   background-color: #253b76;
+}
+
+.no-focus-visible:focus-visible {
+  outline: -webkit-focus-ring-color 0px;
 }
 
 @font-face {
@@ -41,7 +45,8 @@
   background: #4d4d4de5
 }
 
-body {
+body,
+html {
   background: var(--background);
   color: #9ca3af;
 }
@@ -87,11 +92,11 @@ body {
   padding-bottom: 13px !important;
 }
 
-.especial .cm-lineWrapping{
+.especial .cm-lineWrapping {
   padding: 0 !important;
 }
 
-.especial-2 .cm-lineWrapping{
+.especial-2 .cm-lineWrapping {
   margin: 0px 8px !important;
   padding-top: 0 !important;
 }
