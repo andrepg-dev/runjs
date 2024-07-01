@@ -25,11 +25,11 @@ export const viewTheme = createTheme({
     { tag: t.number, color: '#fbde2d' }, //Amarillo
     { tag: t.function(t.variableName), color: '#61ce3c' }, // Azul 8da6ce
     { tag: t.propertyName, color: '#61ce3c' }, // Blanco
-    { tag: t.bracket, color: '#61ce3c' }, // Blanco
+    { tag: t.bracket, color: '#FFF' }, // Blanco
     { tag: t.squareBracket, color: '#61ce3c' }, // Blanco
     { tag: t.definition(t.variableName), color: '#61ce3c' },
-    { tag: t.separator, color: '#61ce3c' }, // Blanco
-    { tag: t.derefOperator, color: '#61ce3c' }, // Blanco
+    { tag: t.separator, color: '#FFF' }, // Blanco
+    { tag: t.derefOperator, color: '#FFF' }, // Blanco
     { tag: t.null, color: '#d8fa3c' }, // Amarillo lima
   ],
 });
