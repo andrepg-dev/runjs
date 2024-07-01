@@ -25,7 +25,11 @@ const Sandbox = ({ code }: { code: string }) => {
         setConsoleMessages((prev) => [...prev, { type: 'error', payload: { line, column, message } }]);
       },
       default: (payload: any, type: any, line: any) => {
-        let content = payload.map((item: string) => item).join(' ');
+        let content = payload.map((item: string) => `'${item}'`).join(' ');
+
+        if (payload.some((item: any) => typeof item === 'number')) {
+          content = payload.map((item: string) => item).join(' ');
+        }
 
         if (payload.some((item: any) => !isPrimitive(item))) {
           content = payload.map((item: string) => JSON.stringify(item)).join(' ');
@@ -83,7 +87,7 @@ const Sandbox = ({ code }: { code: string }) => {
   return (
     <div className="overflow-y-auto min-h-full pl-3 relative w-full py-[13px]">
       <ul id="console-list" className="flex">
-        <div className="flex flex-col text-[#78887a] text-right mr-4">
+        <div className="flex flex-col text-[#78887a] text-right mr-4 select-none">
           {Array(totalLines).fill(0).map((_, index) => (
             <span key={index} className="text-nowrap">{index + 1}</span>
           ))}
@@ -95,7 +99,6 @@ const Sandbox = ({ code }: { code: string }) => {
               {msg.type !== 'error' && (
                 <div key={msg.line} className="flex gap-4">
                   <span className={`text-wrap whitespace-pre-wrap text-green-500`}>
-                    {/* TODO: Mostrar en la derecha y en la linea que debe de ir */}
                     {msg.payload}
                   </span>
                 </div>
