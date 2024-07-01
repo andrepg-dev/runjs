@@ -103,23 +103,27 @@ const Sandbox = ({ code }: { code: string }) => {
                 <div key={msg.payload.line} className="flex flex-col gap-4 text-[#ff6400]">
                   <span className="text-[#d8eb2b]">{msg.payload.message}</span>
                   <div className="flex gap-2">
-                    <span>{'>'}</span>
+                    <span>
+                      {msg.payload.line - 2 > -1 && <br />}
+                      {'>'}</span>
                     <div className="flex flex-col text-[#d8eb2b]">
                       {Array.of(
+                        msg.payload.line - 1,
                         msg.payload.line,
                         msg.payload.line + 1,
                         msg.payload.line + 2,
                         msg.payload.line + 3,
                         msg.payload.line + 4,
-
                       ).map(item => (
                         <span key={item} className="text-nowrap">
-                          {item} |
+                          {item > 0 && <>{item} |</>}
                         </span>
                       ))}
                     </div>
                     <ReactCodeMirror
-                      value={code.split('\n').slice(msg.payload.line - 1, msg.payload.line + 4).join('\n')}
+                      value={code.split('\n').slice(
+                        msg.payload.line - 2 > -1 ? msg.payload.line - 2
+                          : msg.payload.line - 1, msg.payload.line + 4).join('\n')}
                       extensions={[
                         javascript({ jsx: false, typescript: true }),
                         EditorView.lineWrapping,
