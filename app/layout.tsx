@@ -8,11 +8,6 @@ export const metadata: Metadata = {
   assets: ["favicon.ico"],
   applicationName: 'NinjaJS',
   creator: 'NinjaJS',
-  twitter: {
-    card: 'summary',
-    site: '@ninja_js',
-    creator: '@ninja_js',
-  },
   authors: {
     name: 'Andre Ponce',
     url: 'https://andrepg.me'
