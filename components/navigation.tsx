@@ -1,10 +1,8 @@
 'use client'
 import { cn } from '@/lib/utils';
 import { Plus, SquareSplitVertical } from 'lucide-react';
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useCallback } from 'react';
 import Window from './window';
-
-import autoAnimate from '@formkit/auto-animate';
 
 interface NavigationProps {
   setDirection: Dispatch<SetStateAction<"horizontal" | "vertical">>;
@@ -15,72 +13,71 @@ interface NavigationProps {
   activeWindow: number;
 }
 
-export interface Windows {
-  windows: Window[];
-}
-
 export interface Window {
   name: string;
   code: string;
 }
 
+const updateLocalStorage = (windows: Window[], activeWindow: number) => {
+  localStorage.setItem('windows', JSON.stringify(windows));
+  localStorage.setItem('activeWindow', JSON.stringify(activeWindow));
+};
+
 export default function Navigation({ setWindows, windows, setDirection, direction, activeWindow, setActiveWindow }: NavigationProps) {
-  const parent = useRef(null)
+  const parent = useRef(null);
 
   useEffect(() => {
-    parent.current && autoAnimate(parent.current)
-  }, [parent])
+    // parent.current && autoAnimate(parent.current)
+  }, [parent]);
 
-  const addWindow = () => {
-    setWindows([...windows, { name: `Nueva pestaña`, code: `` }])
-    setActiveWindow(windows.length);
-    localStorage.setItem('activeWindow', JSON.stringify(windows.length));
-    localStorage.setItem('windows', JSON.stringify([...windows, { name: `Nueva pestaña`, code: `` }]));
-  }
+  const addWindow = useCallback(() => {
+    const newWindows = [...windows, { name: `Nueva pestaña`, code: `` }];
+    setWindows(newWindows);
+    setActiveWindow(newWindows.length - 1);
+    updateLocalStorage(newWindows, newWindows.length - 1);
+  }, [windows, setWindows, setActiveWindow]);
 
-  const deleteWindow = (idx: number) => {
-    setWindows(windows.filter((_, i) => i !== idx));
-    localStorage.setItem('windows', JSON.stringify(windows.filter((_, i) => i !== idx)));
+  const deleteWindow = useCallback((idx: number) => {
+    const newWindows = windows.filter((_, i) => i !== idx);
+    let newActiveWindow = activeWindow;
 
-    if (activeWindow === idx && windows.length > 1) {
-      setActiveWindow(0);
+    if (activeWindow >= newWindows.length) {
+      newActiveWindow = newWindows.length - 1;
     } else if (activeWindow > idx) {
-      setActiveWindow(activeWindow - 1);
+      newActiveWindow = activeWindow - 1;
     }
 
-    if (windows.length === 1) {
-      setWindows([{ name: `Nueva pestaña`, code: `` }]);
-      setActiveWindow(0);
-      localStorage.setItem('windows', JSON.stringify([{ name: `Nueva pestaña`, code: `` }]));
-      localStorage.setItem('activeWindow', JSON.stringify(0));
-    }
-  }
+    setWindows(newWindows.length ? newWindows : [{ name: `Nueva pestaña`, code: `` }]);
+    setActiveWindow(newWindows.length ? newActiveWindow : 0);
+    updateLocalStorage(newWindows.length ? newWindows : [{ name: `Nueva pestaña`, code: `` }], newWindows.length ? newActiveWindow : 0);
+  }, [windows, activeWindow, setWindows, setActiveWindow]);
 
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const keyEvent = (key: string, callback: () => void) => {
+        if (event.ctrlKey && event.key.toLowerCase() === key) {
+          event.preventDefault();
+          event.stopPropagation();
+          callback();
+        }
+      };
 
-      if (event.ctrlKey && event.key.toLowerCase() === 'u') {
-        event.stopPropagation();
-        deleteWindow(activeWindow);
-      }
-
-      if (event.ctrlKey && event.key.toLowerCase() === 'y') {
-        event.stopPropagation();
-        addWindow();
-      }
-    }
+      keyEvent('e', addWindow);
+      keyEvent('q', () => deleteWindow(activeWindow));
+    };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeWindow, windows, deleteWindow])
+  }, [activeWindow, addWindow, deleteWindow]);
 
   return (
     <header className="h-[37px] min-h-[37px] max-w-full flex items-center border-b border-border bg-secondary fixed top-0 left-0 right-0">
       <button
         title="Cambiar orientación"
         onClick={() => {
-          localStorage.setItem('direction', direction === 'horizontal' ? 'vertical' : 'horizontal')
-          setDirection(direction === 'horizontal' ? 'vertical' : 'horizontal')
+          const newDirection = direction === 'horizontal' ? 'vertical' : 'horizontal';
+          localStorage.setItem('direction', newDirection);
+          setDirection(newDirection);
         }}
         className="h-full px-4 bg-secondary flex items-center justify-center text-gray-400 border-border border-r hover:bg-accent opacity-60 !border-none !outline-none no-focus-visible">
         <SquareSplitVertical className={cn(direction === 'horizontal' && 'rotate-90', 'transition')} />
@@ -108,5 +105,5 @@ export default function Navigation({ setWindows, windows, setDirection, directio
         <Plus strokeWidth={2} size={16} />
       </button>
     </header>
-  )
+  );
 }
