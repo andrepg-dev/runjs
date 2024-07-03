@@ -32,10 +32,10 @@ export default function Navigation({ setWindows, windows, setDirection, directio
   }, [parent])
 
   const addWindow = () => {
-    setWindows([...windows, { name: `Nueva pestaña ${windows.length + 1}`, code: `` }])
+    setWindows([...windows, { name: `Nueva pestaña`, code: `` }])
     setActiveWindow(windows.length);
     localStorage.setItem('activeWindow', JSON.stringify(windows.length));
-    localStorage.setItem('windows', JSON.stringify([...windows, { name: `Nueva pestaña ${windows.length + 1}`, code: `` }]));
+    localStorage.setItem('windows', JSON.stringify([...windows, { name: `Nueva pestaña`, code: `` }]));
   }
 
   const deleteWindow = (idx: number) => {
