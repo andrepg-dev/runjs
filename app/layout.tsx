@@ -4,7 +4,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'NinjaJS - Online JavaScript Editor',
   description: 'NinjaJS is an online JavaScript editor that allows you to write, run, and share your code in real-time.',
-  assets: ["favicon.ico"],
+  assets: ["favicon.ico", "/icon-512x512.png"],
   applicationName: 'NinjaJS',
   creator: 'NinjaJS',
   authors: {
@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   },
   keywords: ['ninja', 'js', 'javascript', 'editor', 'code', 'online', 'real-time'],
   manifest: '/manifest.json',
+  icons: {
+    apple: "/icon-512x512.png",
+  },
+  themeColor: '#000000',
 }
 
 export default function RootLayout({
