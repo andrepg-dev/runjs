@@ -1,8 +1,9 @@
 'use client'
-import { cn } from '@/lib/utils';
+import { cn, keyEvent } from '@/lib/utils';
 import { Plus, SquareSplitVertical } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useRef, useCallback } from 'react';
 import Window from './window';
+import { isNumber } from 'util';
 
 interface NavigationProps {
   setDirection: Dispatch<SetStateAction<"horizontal" | "vertical">>;
@@ -24,11 +25,6 @@ const updateLocalStorage = (windows: Window[], activeWindow: number) => {
 };
 
 export default function Navigation({ setWindows, windows, setDirection, direction, activeWindow, setActiveWindow }: NavigationProps) {
-  const parent = useRef(null);
-
-  useEffect(() => {
-    // parent.current && autoAnimate(parent.current)
-  }, [parent]);
 
   const addWindow = useCallback(() => {
     const newWindows = [...windows, { name: `Nueva pestaña`, code: `` }];
@@ -53,17 +49,20 @@ export default function Navigation({ setWindows, windows, setDirection, directio
   }, [windows, activeWindow, setWindows, setActiveWindow]);
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const keyEvent = (key: string, callback: () => void) => {
-        if (event.ctrlKey && event.key.toLowerCase() === key) {
-          event.preventDefault();
-          event.stopPropagation();
-          callback();
-        }
-      };
+    function alternarVentanas(windowidx: number) {
+      if (windowidx < 0) return setActiveWindow(0)
+      if (windowidx >= windows.length) return
+      return setActiveWindow(windowidx)
+    }
 
-      keyEvent('e', addWindow);
-      keyEvent('q', () => deleteWindow(activeWindow));
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!Number.isNaN(parseInt(event.key))) {
+        if (event.altKey && isNumber(parseInt(event.key))) {
+          alternarVentanas(parseInt(event.key) - 1)
+        }
+      }
+      keyEvent(event, 'e', addWindow);
+      keyEvent(event, 'q', () => deleteWindow(activeWindow));
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -83,10 +82,11 @@ export default function Navigation({ setWindows, windows, setDirection, directio
         <SquareSplitVertical className={cn(direction === 'horizontal' && 'rotate-90', 'transition')} />
       </button>
 
-      <ul className="flex h-full max-w-[95%] overflow-hidden" ref={parent}>
+      <ul className="flex h-full max-w-[95%] overflow-hidden">
         {windows.map((window, i) => (
           <Window
             key={i}
+            index={i}
             name={window.name}
             onClick={() => {
               setActiveWindow(i);

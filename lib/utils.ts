@@ -17,3 +17,11 @@ export function formatCode(value: string, options?: js_beautify.JSBeautifyOption
   });
   return res;
 }
+
+export function keyEvent(event: KeyboardEvent, key: string, callback: () => void) {
+  if (event.altKey && event.key.toLowerCase() === key) {
+    event.preventDefault();
+    event.stopPropagation();
+    callback();
+  }
+};
