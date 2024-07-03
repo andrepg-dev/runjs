@@ -29,7 +29,7 @@ export default function Window({ name, onClick, isActive, onClose, index }: Wind
 
       <button
         className="aspect-square hover:bg-accent p-1 rounded"
-        title="Cerrar"
+        title="Cerrar | Alt + W"
         onClick={(e) => { e.stopPropagation(); onClose() }}
       >
         <X size={14} strokeWidth={2} />

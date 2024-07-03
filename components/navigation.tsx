@@ -61,8 +61,8 @@ export default function Navigation({ setWindows, windows, setDirection, directio
           alternarVentanas(parseInt(event.key) - 1)
         }
       }
-      keyEvent(event, 'e', addWindow);
-      keyEvent(event, 'q', () => deleteWindow(activeWindow));
+      keyEvent(event, 't', addWindow);
+      keyEvent(event, 'w', () => deleteWindow(activeWindow));
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -87,7 +87,7 @@ export default function Navigation({ setWindows, windows, setDirection, directio
           <Window
             key={i}
             index={i}
-            name={window.name}
+            name={window.code.length === 0 ? window.name : window.code.split('').splice(0, 30).join('')}
             onClick={() => {
               setActiveWindow(i);
               localStorage.setItem('activeWindow', JSON.stringify(i));
@@ -100,7 +100,8 @@ export default function Navigation({ setWindows, windows, setDirection, directio
 
       <button
         onClick={addWindow}
-        className="h-full px-3 flex items-center justify-center hover:bg-accent text-white !border-none !outline-none no-focus-visible" title="Nueva pestaña"
+        className="h-full px-3 flex items-center justify-center hover:bg-accent text-white !border-none !outline-none no-focus-visible"
+        title="Nueva pestaña | Alt + T"
       >
         <Plus strokeWidth={2} size={16} />
       </button>
