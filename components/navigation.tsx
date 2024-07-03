@@ -63,6 +63,8 @@ export default function Navigation({ setWindows, windows, setDirection, directio
       }
       keyEvent(event, 't', addWindow);
       keyEvent(event, 'w', () => deleteWindow(activeWindow));
+      // formatCode
+      
     };
 
     window.addEventListener('keydown', handleKeyDown);

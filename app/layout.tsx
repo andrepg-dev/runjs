@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Head from 'next/head'
 
 export const metadata: Metadata = {
   title: 'NinjaJS - Online JavaScript Editor',
@@ -13,6 +12,7 @@ export const metadata: Metadata = {
     url: 'https://andrepg.me'
   },
   keywords: ['ninja', 'js', 'javascript', 'editor', 'code', 'online', 'real-time'],
+  manifest: '/manifest.json',
 }
 
 export default function RootLayout({
