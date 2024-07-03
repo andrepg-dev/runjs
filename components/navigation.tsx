@@ -50,7 +50,9 @@ export default function Navigation({ setWindows, windows, setDirection, directio
 
     if (windows.length === 1) {
       setWindows([{ name: `Nueva pestaña`, code: `` }]);
+      setActiveWindow(0);
       localStorage.setItem('windows', JSON.stringify([{ name: `Nueva pestaña`, code: `` }]));
+      localStorage.setItem('activeWindow', JSON.stringify(0));
     }
   }
 
@@ -84,7 +86,7 @@ export default function Navigation({ setWindows, windows, setDirection, directio
         <SquareSplitVertical className={cn(direction === 'horizontal' && 'rotate-90', 'transition')} />
       </button>
 
-      <ul className="flex h-full" ref={parent}>
+      <ul className="flex h-full max-w-[95%] overflow-hidden" ref={parent}>
         {windows.map((window, i) => (
           <Window
             key={i}

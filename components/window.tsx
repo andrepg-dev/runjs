@@ -13,7 +13,7 @@ export default function Window({ name, onClick, isActive, onClose }: Window) {
 
   return (
     <li onClick={onClick} className={cn(
-      'min-w-[188px] max-w-[188px] cursor-pointer w-[188px] border-r border-border h-full flex items-center justify-between text-[11px] px-1 text-center align-middle z-50 pt-1 relative',
+      'min-w-[188px] max-w-[188px] w-[188px]  cursor-pointer border-r border-border h-full flex items-center justify-between text-[11px] px-1 text-center align-middle z-50 pt-1 relative',
       isActive ? 'text-white bg-background' : ''
     )}
       style={{ fontFamily: `system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif` }}
