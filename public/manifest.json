@@ -1,7 +1,7 @@
 {
   "theme_color": "#f0db4f",
   "background_color": "#f0db4f",
-  "display": "browser",
+  "display": "standalone",
   "scope": "/",
   "start_url": "/",
   "name": "NinjaJS",
