@@ -8,33 +8,56 @@ import {
 
 import Editor from '@/components/code-mirror/editor';
 import Sandbox from "@/components/sandbox";
+import { formatCode } from "@/lib/utils";
+import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from 'use-debounce';
-import { useEffect, useState } from "react";
 
 interface RunJSProps {
-  onChange: (val: string) => void;
-  code: string;
   direction: 'horizontal' | 'vertical';
+  code: string;
+  onCodeChange: (code: string) => void;
+  isActive: boolean;
 }
 
-export default function RunJS({ direction, code, onChange }: RunJSProps) {
-  const [codeDebounce] = useDebounce(code, 600);
+export default function RunJS({ direction, code, onCodeChange, isActive }: RunJSProps) {
+  const [currentCode, setCurrentCode] = useState(code);
+  const [codeDebounce] = useDebounce(currentCode, 500);
+
+  const onChange = useCallback((val: any) => {
+    setCurrentCode(val);
+    onCodeChange(val);
+  }, [onCodeChange]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.altKey && event.shiftKey && event.key.toLowerCase() === 'f') {
+        setCurrentCode(formatCode(currentCode));
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentCode]);
+
+  useEffect(() => {
+    setCurrentCode(code);
+  }, [code]);
+
+  if (!isActive) return null;
 
   return (
     <ResizablePanelGroup
       direction={direction}
       className="flex w-full h-screen pt-[37px]"
     >
-      <ResizablePanel className="flex w-full" defaultSize={80} minSize={10}>
-        <Editor code={!codeDebounce ? code : codeDebounce} onChange={onChange} />
+      <ResizablePanel className="flex w-full" defaultSize={50} minSize={10}>
+        <Editor code={code} onChange={onChange} />
       </ResizablePanel>
 
       <ResizableHandle />
 
-      <ResizablePanel defaultSize={75} minSize={10} className="flex">
-        <Sandbox code={!codeDebounce ? code : codeDebounce} />
+      <ResizablePanel defaultSize={50} minSize={10} className="flex">
+        <Sandbox code={codeDebounce} />
       </ResizablePanel>
     </ResizablePanelGroup>
-
-  )
+  );
 }
