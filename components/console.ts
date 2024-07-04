@@ -1,67 +1,135 @@
-export const generateConsoleScript = () => {
-  return `<script>
-    const customConsole = (w) => {
-      const pushToConsole = (payload, type, line) => {
-        w.parent.postMessage({
-          console: {
-            payload: payload,
-            type: type,
-            line: line,
-          }
-        }, "*");
-      }
+export const consoleScript = () => `
+ <script>
+              function p(t) {
+                  if (t.length > 1) {
+                      const l = t[1].getLineNumber();
+                      const c = t[1].getColumnNumber();
+                      return [l, c];
+                  }
+                  return [1, 0];
+              }
+              function cs() {
+                  const pst = Error.prepareStackTrace;
+                  try {
+                      let r = [];
+                      Error.prepareStackTrace = (_, cs) => {
+                          const cwc = cs.slice(1);
+                          r = cwc;
+                          return cwc;
+                      };
 
-      pushToConsole("clear", "system");
+                      new Error().stack;
+                      return r;
+                  } finally {
+                      Error.prepareStackTrace = pst;
+                  }
+              }
+              Object.defineProperty(window, "_runjs", {
+                  enumerable: false,
+                  configurable: false,
+                  writable: false,
+                  value: {
+                      cc: 0,
+                      le: false,
+                  },
+              });
+              Object.seal(window._runjs);
 
-      w.onerror = (message, url, line, column) => {
-        const fixedLine = line - 74;
-        pushToConsole({ line: fixedLine, column: column - 1, message }, "error", fixedLine, column - 1);
-      }
+              window.parent.postMessage({ type: "sandbox:ready" }, "*");
+              const originalSetTimeout = setTimeout;
+              const originalSetInterval = setInterval;
+              const originalRequestAnimationFrame = window.requestAnimationFrame;
 
-      const console = {
-        log: function(...args){
-          try {
-            throw new Error();
-          } catch (error) {
-            const stack = error.stack.split("\\n")[2].trim();
-            const line = stack.match(/:(\\d+):\\d+/)[1] - 74;
-            pushToConsole(args, "log", line);
-          }
-        },
-        error: function(...args){
-          try {
-            throw new Error();
-          } catch (error) {
-            const stack = error.stack.split("\\n")[2].trim();
-            const line = stack.match(/:(\\d+):\\d+/)[1] - 74;
-            pushToConsole(args, "error", line);
-          }
-        },
-        warn: function(...args){
-          try {
-            throw new Error();
-          } catch (error) {
-            const stack = error.stack.split("\\n")[2].trim();
-            const line = stack.match(/:(\\d+):\\d+/)[1] - 74;
-            pushToConsole(args, "warn", line);
-          }
-        },
-        info: function(...args){
-          try {
-            throw new Error();
-          } catch (error) {
-            const stack = error.stack.split("\\n")[2].trim();
-            const line = stack.match(/:(\\d+):\\d+/)[1] - 74;
-            pushToConsole(args, "info", line);
-          }
-        }
-      }
+              console.log = (...args) => {
+                  const t = cs();
+                  const [l, c] = p(t);
+                  window._runjs.cc += 1;
+                  originalSetTimeout(() =>
+                      window.parent.postMessage(
+                          {
+                              type: "sandbox:consolelog",
+                              message: args,
+                              position: { line: l, column: c },
+                              count: window._runjs.cc,
+                              initial: !window._runjs.le,
+                          },
+                          "*"
+                      )
+                  );
+                  if (window._runjs.cc > 2000) {
+                    throw new Error("Infinite loop detected");
+                  }
+              };
+              console.error = console.log;
+              console.info = console.log;
+              console.debug = console.log;
+              console.warn = console.log;
+              window.alert = console.log;
+              window.prompt = window.confirm = window.print = () => {};
 
-      window.console = { ...window.console, ...console };
-    }
+              function isPromise(value) {
+                  return Boolean(value && typeof value.then === "function");
+              }
 
-    if (window.parent){
-      customConsole(window);
-    }
-    </script>`;
-}
+              function exec(code) {
+                 if (!code) return Promise.resolve();
+                     return new Promise(function (resolve, reject) {
+                      let result;
+                      try {
+                      // Detectar bucles while y agregar un contador de iteraciones
+                      const modifiedCode = code.replace(/while\s*\((.*?)\)\s*{/, (match, condition) => {
+                          return \`\let _iter = 0; while (\${condition}) { if (++_iter > 2000) throw new Error('Infinite loop detected');\`\;
+                      });
+                      result = eval.call(null, modifiedCode);
+                      } catch (error) {
+                          reject(\`\${error.name || "Error"}: \${error.message || error}\`\);
+                      }
+                      resolve(result);
+                  });
+              }
+
+              window.addEventListener("message", (event) => {
+                  if (event.data?.type === "sandbox:evaluate") {
+                      window._runjs.cc = 0;
+                      const line = event.data.line;
+                      const expression = event.data.expression;
+                      window._runjs.le = event.data.lastExpression;
+
+                      exec(expression)
+                          .then((result) => {
+                              window.parent.postMessage(
+                                  {
+                                      type: "sandbox:log",
+                                      message: result,
+                                      position: { line: parseInt(line, 10), column: 0 },
+                                  },
+                                  "*"
+                              );
+                          })
+                          .catch((result) => {
+                              window.parent.postMessage(
+                                  {
+                                      type: "sandbox:error",
+                                      message: result,
+                                      position: { line: parseInt(line, 10), column: 0 },
+                                  },
+                                  "*"
+                              );
+                          });
+                  }
+              });
+
+              function fnHandler(fn) {
+                  return function () {
+                      if (window._runjs.le) {
+                          return fn.apply(this, arguments);
+                      }
+                      return;
+                  };
+              }
+
+              setTimeout = fnHandler(originalSetTimeout);
+              setInterval = fnHandler(originalSetInterval);
+              window.requestAnimationFrame = fnHandler(originalRequestAnimationFrame);
+          </script>
+`

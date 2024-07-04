@@ -1,189 +1,88 @@
 'use client'
-import { useCallback, useEffect, useRef, useState } from "react";
-import { generateConsoleScript } from "./console";
-import ReactCodeMirror, { EditorView } from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { myTheme } from "@/theme/mytheme";
-import { viewTheme } from "@/theme/view-theme";
-import { formatCode } from "@/lib/utils";
 
-const Sandbox = ({ code }: { code: string }) => {
+import { useEffect, useRef, useState } from "react";
+import { consoleScript } from "./console";
+
+enum SandboxType {
+  evaluate = 'sandbox:evaluate',
+  log = 'sandbox:log',
+  console = 'sandbox:consolelog',
+  error = 'sandbox:error'
+}
+
+interface IData {
+  count: number;
+  initial?: boolean;
+  message: string[];
+  type: SandboxType;
+  position: { line: number, column: number }
+}
+
+export default function Sandbox({ code }: { code: string }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [consoleMessages, setConsoleMessages] = useState<{ type: any; payload: any; line?: any }[]>([]);
-
-  const isPrimitive = useCallback((item: any) =>
-    ['string', 'number', 'boolean', 'symbol', 'bigint'].includes(typeof item) || item === null || item === undefined,
-    []
-  );
-  
-  const clearConsole = () => {
-    setConsoleMessages([]);
-  };
-
-  const handlers: Record<any, any> = {
-    system: (payload: any) => {
-      if (payload === 'clear') {
-        clearConsole();
-      }
-    },
-    error: (payload: any) => {
-      const { line, column, message } = payload;
-      setConsoleMessages((prev) => [...prev, { type: 'error', payload: { line, column, message } }]);
-    },
-    default: (payload: any, type: any, line: any) => {
-      let content = payload.map((item: string) => "'" + item + "'").join(' ');
-
-      if (payload.some((item: any) => typeof item === 'number' || typeof item === 'boolean' || typeof item === 'bigint')) {
-        content = payload.map((item: string) => item).join(' ');
-      }
-
-      if (payload.some((item: any) => !isPrimitive(item))) {
-        content = payload.map((item: string) => formatCode(JSON.stringify(item), {
-          brace_style: 'collapse'
-        })).join(' ');
-      }
-
-      setConsoleMessages((prev) => [...prev, { type, payload: content, line }]);
-    },
-    loop: (payload: any) => {
-      clearConsole();
-      const { message } = payload;
-      setConsoleMessages((prev) => [...prev, { type: 'loop', payload: { message } }]);
-    },
-  };
-
-  const handleMessage = (event: MessageEvent) => {
-    const { console: ConsoleData } = event.data;
-    if (!ConsoleData) return;
-
-    const { payload, type, line } = ConsoleData;
-
-    if (event.source === iframeRef.current?.contentWindow) {
-      const handler = handlers[type] || handlers.default;
-      handler(payload, type, line);
-    } else if (type === 'loop') {
-      handlers.loop(payload);
-    }
-  };
+  const [data, setData] = useState<IData[]>()
 
   useEffect(() => {
-    window.addEventListener('message', handleMessage);
+    const handler: { [key: string]: (e: IData) => void } = {
+      'sandbox:consolelog': (e: IData) => {
+        if (e.count >= 1999) return
+        console.log(e)
+      },
+      'sandbox:error': (e: IData) => {
+        console.error(e)
+      }
+    }
 
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
+    const handle = (event: MessageEvent) => {
+      if (event.source === iframeRef.current?.contentWindow) {
+        const eventHandler = handler[event.data.type]
+
+        if (eventHandler) {
+          eventHandler(event.data)
+        }
+      }
+    }
+
+    // Get the data from the iframe
+    window.addEventListener('message', handle)
+  }, [])
+
+  useEffect(() => {
+    const blob = new Blob([HTML], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+
+    if (iframeRef.current) {
+      iframeRef.current.src = blobUrl;
+    }
   }, []);
 
   useEffect(() => {
-    runCode();
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({
+        type: SandboxType.evaluate,
+        expression: code,
+        line: 1,
+        lastExpression: true
+      }, '*');
+    }
   }, [code]);
 
-  const runCode = useCallback(() => {
-    const blob = new Blob([HTML(code)], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    if (iframeRef.current) {
-      iframeRef.current.src = url;
-    }
-  }, [code])
-
-  const allMessage = () => {
-    return consoleMessages.map((msg) => {
-      if (msg.type !== 'error') {
-        return msg.payload;
-      }
-    }).join('\n');
-  }
-
-  const errorMessage = (code: any, msg: any) => {
-    return code.split('\n').slice(
-      msg.payload.line - 2 > -1 ? msg.payload.line - 2
-        : msg.payload.line - 1, msg.payload.line + 4).join('\n')
-  }
-
   return (
-    <div className="overflow-y-auto min-h-full relative w-full py-[13px]">
-      <ul id="console-list" className="flex ml-2">
-        {consoleMessages.map((msg, index) => (
-          <li key={index}>
-            {msg.type === 'error' && (
-              <div key={msg.payload.line} className="flex flex-col gap-4 text-[#ff6400]">
-                <span className="text-[#d8eb2b]">{msg.payload.message}</span>
-                <div className="flex gap-2">
-                  <span>
-                    {msg.payload.line - 2 > -1 && <br />}
-                    {'>'}</span>
-                  <div className="flex flex-col text-[#d8eb2b]">
-                    {Array.of(
-                      msg.payload.line - 1,
-                      msg.payload.line,
-                      msg.payload.line + 1,
-                      msg.payload.line + 2,
-                      msg.payload.line + 3,
-                      msg.payload.line + 4,
-                    ).map(item => (
-                      <span key={item} className="text-nowrap">
-                        {item > 0 && <>{item} |</>}
-                      </span>
-                    ))}
-                  </div>
-                  <ReactCodeMirror
-                    value={errorMessage(code, msg)}
-                    extensions={[
-                      javascript({ jsx: false, typescript: true }),
-                      EditorView.lineWrapping,
-                    ]}
-                    theme={myTheme}
-                    editable={false}
-                    autoFocus
-                    basicSetup={{
-                      autocompletion: false,
-                      foldGutter: false,
-                      lineNumbers: false,
-                    }}
-                    className="especial"
-                  />
-                </div>
-              </div>
-            )}
-          </li>
-        ))}
-
-        {consoleMessages.every(item => item.type !== 'error') && (
-          <ReactCodeMirror
-            value={allMessage()}
-            extensions={[
-              javascript({ jsx: false, typescript: true }),
-              EditorView.lineWrapping,
-            ]}
-            theme={viewTheme}
-            editable={false}
-            autoFocus
-            basicSetup={{
-              autocompletion: false,
-              foldGutter: false,
-            }}
-            className="especial-2 overflow-y-auto min-h-full min-w-full relative text-base custom-line-height"
-          />
-        )}
-
-      </ul >
-      <iframe title="Sandbox" sandbox="allow-scripts" ref={iframeRef} className="invisible hidden" />
-    </div >
+    <div>
+      <iframe ref={iframeRef} className="hidden" />
+    </div>
   );
-};
+}
 
-export default Sandbox;
-
-export const HTML = (code: string) => `
-<!DOCTYPE html>
+const HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sandbox</title>
-    ${generateConsoleScript()}
+  <title>Document</title>
 </head>
 <body>
-    <script type="module">${code}</script>
+  ${consoleScript()}  
 </body>
-</html>`;
+</html>
+`;
