@@ -72,6 +72,14 @@ export const consoleScript = () => `
               }
 
               function exec(code) {
+              let timeCount = 0;
+
+                 const timer = setInterval(()=>{
+                 timeCount++;       
+                 },2000)
+
+                 if(timer >= 1) throw new Error("Mucho tiempo pa")
+
                  if (!code) return Promise.resolve();
                      return new Promise(function (resolve, reject) {
                       let result;
